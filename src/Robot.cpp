@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <Latch.h>
+#include <Latch.h>   //Includes code for the latch
 #include <iostream>
 
 
@@ -64,7 +64,7 @@ public:
 		delete myDrive;
 	}
 
-	float ShooterAngle()
+	float ShooterAngle()	//calculates the angle of the shooter.
 	{
 		float y = (pot.GetAverageVoltage() - 0.94) / 0.021;
 		y -= 9.995 - 7.954;
@@ -73,7 +73,7 @@ public:
 		return y;
 	}
 
-	void BallControl(float joy, bool shoot, bool suck, bool up, bool down, bool pshoot)
+	void BallControl(float joy, bool shoot, bool suck, bool up, bool down, bool pshoot) //controlls what happens to the ball.
 	{
 		if (shoot)
 			launchLoader.SetAngle(0);
@@ -118,7 +118,7 @@ public:
 		//send(conn_desc, joybuff, sizeof(joybuff), 0);
 	}
 
-	void ClimbControl(bool down, bool up)
+	void ClimbControl(bool down, bool up) //controlls the climbing system.
 	{
 		if (down) {
 			if (!bLimit.Get()) {
@@ -142,7 +142,7 @@ public:
 		}
 	}
 
-	void RampSpeed(float leftjoy, float rightjoy, float &l, float &r)
+	void RampSpeed(float leftjoy, float rightjoy, float &l, float &r)	//code for ramp spped.
 	{
 		if (leftjoy > l)
 			l += SPEED_INC;
@@ -155,7 +155,7 @@ public:
 			r -= SPEED_INC;
 	}
 
-	void PublishDash()
+	void PublishDash()	//publishes all values to the smartdashboard.
 	{
 		SmartDashboard::PutNumber("Gyro Angle", gyro.GetAngle());
 		SmartDashboard::PutNumber("Pot Voltage", pot.GetAverageVoltage());
@@ -166,7 +166,7 @@ public:
 
 private:
 
-	void RobotInit()
+	void RobotInit()	//Code that executes on startup.
 	{
 		SmartDashboard::PutString("Robot Messages", "Entering RobotInit()");
 		gyro.Reset();
@@ -204,57 +204,57 @@ private:
 		*/
 	}
 
-	void AutonomousInit()
+	void AutonomousInit()	//Code that executes at the beginning of auto.
 	{
 		SmartDashboard::PutString("Robot Messages", "AutoInit()");
-		robotimer.Reset();
-		robotimer.Start();
-		gyro.Reset();
+		robotimer.Reset(); //resets the robot's timer. 
+		robotimer.Start();	// starts the robot timer.
+		gyro.Reset();	//resets the gyro
 	}
 
-	void AutonomousPeriodic()
+	void AutonomousPeriodic()	//Autonomous code.
 	{
 		SmartDashboard::PutString("Robot Messages", "Entering AutoPeridoic()");
 		PublishDash();
-		float gyroangle = gyro.GetAngle();
+		float gyroangle = gyro.GetAngle();	//sets variable gyroangle to the angle of the Gyro.
 		if (decswitch0.Get()) {
-			if (robotimer.Get() < 6.0) {
+			if (robotimer.Get() < 6.0) {	//for "6.0" seconds drive forward.
 				RampSpeed(0.0, 0.6, currleft, currright);
 				myDrive->Drive(currright, -gyroangle * TURN_SCALING);
 				BallControl(0.0, false, false, false, false, false);
 			}
-			else {
+			else {	//after time has elapsed stop moving forward.
 				myDrive->Drive(0.0, 0.0);
 			}
 		}
-		else {
-			myDrive->Drive(0.0, 0.0);
-			if (ShooterAngle() > 55)
+		else {	//if the switch is in position 2 then do auto shot.
+			myDrive->Drive(0.0, 0.0);	//do not drive forward.
+			if (ShooterAngle() > 55)	//set the shooter angle to 55 degrees.
 				BallControl(0.0, false, false, false, true, false);
-			else
+			else	//once shooter equals 55 degrees, shoot the ball.
 				BallControl(0.0, false, false, false, false, true);
-				if (robotimer.Get() > 7.0)
+				if (robotimer.Get() > 7.0) 	//after 7 seconds from start of auto. the ball will shoot.
 					BallControl(0.0, true, false, false, false, true);
 		}
 		Wait(0.005);
 	}
 
-	void TeleopInit()
+	void TeleopInit()	//executes at the beginning of teleop.
 	{
-		robotimer.Reset();
-		gyro.Reset();
+		robotimer.Reset();	//resets timer.
+		gyro.Reset();		//resets gyro.
 	}
 
-	void TeleopPeriodic()
+	void TeleopPeriodic()		//Code that runs during teleop.
 	{
 		PublishDash();
 
 		// Below is code for the drive system
 		RampSpeed(driverControl.GetRawAxis(1), driverControl.GetRawAxis(3), currleft, currright);
-		if (driverControl.GetRawButton(5)) {
+		if (driverControl.GetRawButton(5)) {	//if button pressed for drive straight.
 			gyro.Reset();
-			driveStraight = true;
-			while (driveStraight) {
+			driveStraight = true; //sets drive straight to true.
+			while (driveStraight) {	//if drive straight is true. drive straight.
 				float gyroangle = gyro.GetAngle();
 				float speed = 0.8;
 				if (driverControl.GetRawButton(6))
@@ -271,8 +271,8 @@ private:
 						shooterControl.GetRawButton(2));
 				driveStraight = driverControl.GetRawButton(5); // keep this at the end
 			}
-		} else {
-			driveStraight = false;
+		} else {	//if button is not pressed.
+			driveStraight = false; //set drivestraight to false.
 			revlatch.Toggle(driverControl.GetRawButton(1), revbutton, revstate);
 			ramplatch.Toggle(driverControl.GetRawButton(4), rampbutton, rampstate);
 			if (rampstate) {
@@ -304,7 +304,7 @@ private:
 		Wait(0.005);
 	}
 
-	void TestPeriodic()
+	void TestPeriodic()	//this executes it you switch to the test section of the dashboard.
 	{
 
 	}
